@@ -53,7 +53,7 @@ pip install customtkinter psutil tk
 
 ## Screenshot
 
-
+![Network Checker](/NCG.png)
 
 ## License
 
