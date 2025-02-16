@@ -65,5 +65,5 @@ Feel free to contribute by submitting issues or pull requests.
 
 ## Author
 
-Your Name (@yourgithubhandle)
+Your Name (@yaramirezdr)
 
