@@ -31,11 +31,11 @@ pip install customtkinter psutil tk
 
 1. Clone this repository:
    ```sh
-   git clone https://github.com/yourusername/network-checker.git
+   git clone https://github.com/aramirezdr/network-checker-gui.git
    ```
 2. Navigate to the project folder:
    ```sh
-   cd network-checker
+   cd network-checker-gui
    ```
 3. Run the application:
    ```sh
@@ -53,7 +53,7 @@ pip install customtkinter psutil tk
 
 ## Screenshot
 
-(Add a screenshot of the application here)
+
 
 ## License
 
