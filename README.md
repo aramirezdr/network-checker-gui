@@ -47,13 +47,10 @@ pip install customtkinter psutil tk
 1. Click on **"Check Connection"** to analyze network connectivity.
 2. The tool will display:
    - Your IP address and network interface.
+   - Logon server (Windows only).
    - Your default gateway and ping test results.
    - DNS resolution for `google.com`.
-   - Logon server (Windows only).
-
-## Screenshot
-
-![Network Checker](/NCG.png)
+   
 
 ## License
 
