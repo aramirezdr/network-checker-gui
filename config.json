@@ -1,0 +1,16 @@
+{
+    "network": {
+        "ping_count": 1,
+        "timeout": 5,
+        "dns_servers": [
+            "google.com",
+            "8.8.8.8"
+        ]
+    },
+    "logging": {
+        "level": "INFO",
+        "file": "network_checker.log",
+        "max_bytes": 1048576,
+        "backup_count": 3
+    }
+}
