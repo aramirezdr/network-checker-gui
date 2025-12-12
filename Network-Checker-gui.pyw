@@ -10,7 +10,7 @@ import subprocess
 import socket
 import psutil
 import customtkinter as ctk
-from tkinter import messagebox
+from tkinter import messagebox, Canvas
 import threading
 from typing import Dict, Any
 
@@ -54,7 +54,7 @@ class NetworkCheckerGUI:
         
         self.root = ctk.CTk()
         self.root.title("OBS Network Connection Checker")
-        self.root.geometry("600x500")
+        self.root.geometry("700x750")
         
         # Main frame
         frame = ctk.CTkFrame(self.root)
@@ -67,8 +67,30 @@ class NetworkCheckerGUI:
             font=("Arial", 18, "bold")
         ).pack(pady=10)
         
+        # Network topology map
+        map_frame = ctk.CTkFrame(frame)
+        map_frame.pack(pady=10, fill="x")
+        
+        ctk.CTkLabel(
+            map_frame,
+            text="Network Topology",
+            font=("Arial", 12, "bold")
+        ).pack(pady=5)
+        
+        self.canvas = Canvas(
+            map_frame,
+            width=650,
+            height=200,
+            bg="#2b2b2b",
+            highlightthickness=0
+        )
+        self.canvas.pack(pady=5)
+        
+        # Initialize topology map
+        self._draw_topology_map()
+        
         # Results frame with scrollable area
-        results_frame = ctk.CTkScrollableFrame(frame, height=300)
+        results_frame = ctk.CTkScrollableFrame(frame, height=100)
         results_frame.pack(pady=10, fill="both", expand=True)
         
         # Result variables
@@ -140,6 +162,138 @@ class NetworkCheckerGUI:
         )
         self.reset_button.pack(side="left", padx=5)
     
+    def _draw_topology_map(self, gw_status="unknown", internet_status="unknown", dc_status="unknown") -> None:
+        """
+        Draw the network topology map showing connection paths.
+        
+        Args:
+            gw_status: Gateway connection status ("success", "failure", "unknown")
+            internet_status: Internet connection status ("success", "failure", "unknown")
+            dc_status: Domain Controller connection status ("success", "failure", "unknown")
+        """
+        # Clear canvas
+        self.canvas.delete("all")
+        
+        # Color mapping
+        colors = {
+            "success": "#4ade80",  # Green
+            "failure": "#f87171",  # Red
+            "unknown": "#6b7280"   # Gray
+        }
+        
+        # Node positions
+        host_x, host_y = 100, 100
+        gw_x, gw_y = 325, 100
+        internet_x, internet_y = 550, 50
+        dc_x, dc_y = 550, 150
+        
+        # Draw connection lines
+        # Host to Gateway
+        gw_color = colors.get(gw_status, colors["unknown"])
+        self.canvas.create_line(
+            host_x + 60, host_y,
+            gw_x - 60, gw_y,
+            fill=gw_color,
+            width=3,
+            arrow="last",
+            arrowshape=(10, 12, 5)
+        )
+        
+        # Gateway to Internet
+        internet_color = colors.get(internet_status, colors["unknown"])
+        self.canvas.create_line(
+            gw_x + 60, gw_y - 20,
+            internet_x - 60, internet_y + 20,
+            fill=internet_color,
+            width=3,
+            arrow="last",
+            arrowshape=(10, 12, 5)
+        )
+        
+        # Gateway to Domain Controller
+        dc_color = colors.get(dc_status, colors["unknown"])
+        self.canvas.create_line(
+            gw_x + 60, gw_y + 20,
+            dc_x - 60, dc_y - 20,
+            fill=dc_color,
+            width=3,
+            arrow="last",
+            arrowshape=(10, 12, 5)
+        )
+        
+        # Draw nodes
+        self._draw_node(host_x, host_y, "Host", "#3b82f6")
+        self._draw_node(gw_x, gw_y, "Gateway", "#8b5cf6")
+        self._draw_node(internet_x, internet_y, "Internet", internet_color)
+        self._draw_node(dc_x, dc_y, "Domain\nController", dc_color)
+        
+        # Draw status indicators
+        self._draw_status_indicator(host_x, host_y + 40, "Active", "#4ade80")
+        self._draw_status_indicator(gw_x, gw_y + 40, self._get_status_text(gw_status), gw_color)
+        self._draw_status_indicator(internet_x, internet_y + 40, self._get_status_text(internet_status), internet_color)
+        self._draw_status_indicator(dc_x, dc_y + 40, self._get_status_text(dc_status), dc_color)
+    
+    def _draw_node(self, x: int, y: int, label: str, color: str) -> None:
+        """
+        Draw a network node on the canvas.
+        
+        Args:
+            x: X coordinate of node center
+            y: Y coordinate of node center
+            label: Node label text
+            color: Node color
+        """
+        # Draw rounded rectangle (node)
+        self.canvas.create_oval(
+            x - 60, y - 25,
+            x + 60, y + 25,
+            fill=color,
+            outline="white",
+            width=2
+        )
+        
+        # Draw label
+        self.canvas.create_text(
+            x, y,
+            text=label,
+            fill="white",
+            font=("Arial", 10, "bold")
+        )
+    
+    def _draw_status_indicator(self, x: int, y: int, status_text: str, color: str) -> None:
+        """
+        Draw a status indicator below a node.
+        
+        Args:
+            x: X coordinate
+            y: Y coordinate
+            status_text: Status text to display
+            color: Status color
+        """
+        self.canvas.create_text(
+            x, y,
+            text=status_text,
+            fill=color,
+            font=("Arial", 8)
+        )
+    
+    def _get_status_text(self, status: str) -> str:
+        """
+        Convert status code to display text.
+        
+        Args:
+            status: Status code ("success", "failure", "unknown")
+            
+        Returns:
+            Display text for status
+        """
+        status_map = {
+            "success": "✓ Connected",
+            "failure": "✗ Failed",
+            "unknown": "○ Unknown"
+        }
+        return status_map.get(status, "○ Unknown")
+    
     def start_check(self) -> None:
         """Start network check in a background thread."""
         if self.is_checking:
@@ -208,6 +362,19 @@ class NetworkCheckerGUI:
                 dns_results_text += f"  {server} → {result}\n"
             self.dns_result.set(dns_results_text.strip())
             
+            # Update topology map based on results
+            gw_status = "success" if gateway and "Reply from" in gateway_ping else "failure" if gateway else "unknown"
+            
+            # Check internet connectivity (based on ping to 8.8.8.8)
+            internet_ping = results.get('internet_ping', 'Not checked')
+            internet_status = "success" if "Reply from" in internet_ping or internet_ping.startswith("64 bytes") else "failure"
+            
+            # Check DC connectivity (based on logon server)
+            dc_status = "success" if results['logon_server'] and results['logon_server'] != "Not available" else "failure"
+            
+            # Redraw topology map with updated statuses
+            self._draw_topology_map(gw_status, internet_status, dc_status)
+            
             self.status_label.configure(text="Check completed successfully", text_color="green")
             self.logger.info("Results updated in GUI")
             
@@ -270,6 +437,8 @@ class NetworkCheckerGUI:
         self.gw_result.set("")
         self.dns_result.set("")
         self.status_label.configure(text="Ready", text_color="gray")
+        # Reset topology map to unknown state
+        self._draw_topology_map()
     
     def run(self) -> None:
         """Start the GUI main loop."""

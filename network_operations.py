@@ -217,6 +217,7 @@ class NetworkChecker:
             'logon_server': 'N/A',
             'gateway': None,
             'gateway_ping': 'Not checked',
+            'internet_ping': 'Not checked',
             'dns_results': {}
         }
         
@@ -236,6 +237,10 @@ class NetworkChecker:
             results['gateway_ping'] = self.ping(gateway)
         else:
             results['gateway_ping'] = 'Gateway not found'
+        
+        # Ping Internet (8.8.8.8 - Google DNS)
+        self.logger.info("Testing Internet connectivity with ping to 8.8.8.8")
+        results['internet_ping'] = self.ping('8.8.8.8')
         
         # DNS queries
         for dns_server in self.config.dns_servers:
